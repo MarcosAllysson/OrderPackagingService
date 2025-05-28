@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using OrderPackagingService.Api.Extensions.Services;
+using OrderPackagingService.Domain.Services;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +23,8 @@ builder.Services.ConfigureDatabase(builder.Configuration);
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddSwaggerConfiguration();
 builder.Services.AddMemoryCache();
+
+builder.Services.AddScoped<IPackingService, PackingService>();
 
 // API behavior
 builder.Services.Configure<ApiBehaviorOptions>(options =>
