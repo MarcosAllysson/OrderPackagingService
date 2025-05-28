@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Strong@Passw0rd
+      - MSSQL_PID=Express
+    ports:
+      - '1433:1433'
+    volumes:
+      - mssql-data:/var/opt/mssql
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile # root dir
+      # dockerfile: src/OrderPackagingService.Api/Dockerfile
+    ports:
+      - '8080:8080'
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=db,1433;Database=OrderPackagingDB;User Id=sa;Password=Strong@Passw0rd;TrustServerCertificate=true;
+    depends_on:
+      - db
+
+volumes:
+  mssql-data:
