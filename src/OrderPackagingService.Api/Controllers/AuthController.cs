@@ -1,10 +1,8 @@
-﻿using System;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
 
 namespace OrderPackagingService.Api.Controllers
 {
@@ -23,27 +21,43 @@ namespace OrderPackagingService.Api.Controllers
         [HttpGet("generate-token")]
         public IActionResult GenerateToken()
         {
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.Name, "TestUser"),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
+            var issuer = _configuration["Jwt:Issuer"];
+            var audience = _configuration["Jwt:Audience"];
+            var key = _configuration["Jwt:SigningKey"];
+            var expirationInMinutesString = _configuration["Jwt:ExpirationInMinutes"];
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SigningKey"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            if (string.IsNullOrEmpty(issuer))
+                return BadRequest("Necessary JWT config (Issuer) is missing.");
+
+            if (string.IsNullOrEmpty(audience))
+                return BadRequest("Necessary JWT config (Audience) is missing.");
+
+            if ( string.IsNullOrEmpty(key))
+                return BadRequest("Necessary JWT config (SigningKey) is missing.");
+
+            if (string.IsNullOrEmpty(expirationInMinutesString))
+                return BadRequest("Necessary JWT config (ExpirationInMinutes) is missing.");
+
+            if (!int.TryParse(expirationInMinutesString, out var expiresInMinutes))
+                return BadRequest("Value 'Jwt:ExpirationInMinutes' is not a valid number.");
+
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(int.Parse(_configuration["Jwt:ExpirationInMinutes"])),
-                signingCredentials: creds
+                issuer: issuer,
+                audience: audience,
+                expires: DateTime.Now.AddMinutes(expiresInMinutes),
+                signingCredentials: credentials
             );
 
-            return Ok(new
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var tokenString = tokenHandler.WriteToken(token);
+
+            return Ok(new Dictionary<string, object>
             {
-                Token = new JwtSecurityTokenHandler().WriteToken(token),
-                ExpiresAt = token.ValidTo
+                { "Token", tokenString },
+                { "ExpiresAt", token.ValidTo }
             });
         }
     }

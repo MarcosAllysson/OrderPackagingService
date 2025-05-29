@@ -8,7 +8,7 @@ namespace OrderPackagingService.Shared.Dtos
 {
     public class ProductRequestDto
     {
-        public string ProductId { get; set; }
-        public DimensionsDto Dimensions { get; set; }
+        public string ProductId { get; set; } = null;
+        public DimensionsDto Dimensions { get; set; } = new DimensionsDto();
     }
 }

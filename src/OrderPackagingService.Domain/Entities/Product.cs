@@ -8,7 +8,7 @@ namespace OrderPackagingService.Domain.Entities
 {
     public class Product
     {
-        public string ProductId { get; set; }
-        public Dimensions Dimensions { get; set; }
+        public required string ProductId { get; set; }
+        public required Dimensions Dimensions { get; set; }
     }
 }

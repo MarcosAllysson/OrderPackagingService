@@ -8,8 +8,8 @@ namespace OrderPackagingService.Shared.Dtos
 {
     public class BoxResponseDto
     {
-        public string BoxId { get; set; }
-        public string Observation { get; set; }
+        public string BoxId { get; set; } = null;
+        public string Observation { get; set; } = null;
         public List<string> Products { get; set; } = new List<string>();
     }
 }

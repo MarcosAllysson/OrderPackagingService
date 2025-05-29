@@ -8,7 +8,7 @@ namespace OrderPackagingService.Domain.Entities
 {
     public class Box
     {
-        public string BoxId { get; set; }
-        public Dimensions Dimensions { get; set; }
+        public required string BoxId { get; set; }
+        public required Dimensions Dimensions { get; set; }
     }
 }

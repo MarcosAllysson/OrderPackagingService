@@ -5,6 +5,7 @@ using OrderPackagingService.Api.Extensions.Services;
 using OrderPackagingService.Domain.Services;
 using Serilog;
 using HealthChecks.UI.Client;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +30,11 @@ builder.Services.AddMemoryCache();
 builder.Services.AddResponseCaching();
 builder.Services.AddResponseCompression(options => options.EnableForHttps = true);
 builder.Services.AddHealthChecks()
-    .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    .AddSqlServer(
+        connectionString: builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found."),
+        healthQuery: "SELECT 1;",
+        name: "sqlserver",
+        failureStatus: HealthStatus.Unhealthy);
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -99,9 +104,9 @@ app.UseRateLimiter();
 // Security
 app.Use(async (context, next) =>
 {
-    context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
-    context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
-    context.Response.Headers.Add("X-Frame-Options", "DENY");
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
     await next();
 });
 

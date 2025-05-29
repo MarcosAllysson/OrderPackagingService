@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using OrderPackagingService.Domain.Entities;
 using OrderPackagingService.Shared.Dtos;
@@ -9,14 +10,15 @@ namespace OrderPackagingService.Domain.Services
     {
         private readonly List<Box> _availableBoxes = new()
         {
-            new Box { BoxId = "Box1", Dimensions = new Dimensions { Height = 30, Width = 40, Length = 80 } },
-            new Box { BoxId = "Box2", Dimensions = new Dimensions { Height = 80, Width = 50, Length = 40 } },
-            new Box { BoxId = "Box3", Dimensions = new Dimensions { Height = 50, Width = 80, Length = 60 } }
+            new Box { BoxId = "Caixa 1", Dimensions = new Dimensions { Height = 30, Width = 40, Length = 80 } }, 
+            new Box { BoxId = "Caixa 2", Dimensions = new Dimensions { Height = 80, Width = 50, Length = 40 } }, 
+            new Box { BoxId = "Caixa 3", Dimensions = new Dimensions { Height = 50, Width = 80, Length = 60 } }  
         };
 
         public List<OrderResponseDto> PackOrders(List<OrderRequestDto> orders)
         {
             var responses = new List<OrderResponseDto>();
+            var largestBoxVolume = _availableBoxes.Max(b => b.Dimensions.Volume); 
 
             foreach (var order in orders)
             {
@@ -33,42 +35,62 @@ namespace OrderPackagingService.Domain.Services
                     }
                 }).ToList();
 
-                var remainingProducts = new List<Product>(products);
+                var remainingProducts = new List<Product>(products.OrderByDescending(p => p.Dimensions.Volume));
                 var boxes = new List<BoxResponseDto>();
 
                 while (remainingProducts.Any())
                 {
-                    var bestBox = FindBestBox(remainingProducts);
+                    var product = remainingProducts.First();
+
+                    var bestBox = _availableBoxes
+                        .Where(b => CanFitInBox(product, b))
+                        .OrderBy(b => b.Dimensions.Volume)
+                        .FirstOrDefault();
 
                     if (bestBox == null)
                     {
                         boxes.Add(new BoxResponseDto
                         {
-                            Observation = "No box can accommodate remaining products."
+                            BoxId = null,
+                            Observation = "Produto não cabe em nenhuma caixa disponível.",
+                            Products = new List<string> { product.ProductId }
                         });
 
-                        break;
+                        remainingProducts.Remove(product);
+
+                        continue;
                     }
 
-                    var boxProducts = new List<string>();
+                    var boxProducts = new List<Product> { product };
+                    remainingProducts.Remove(product);
                     var boxVolume = bestBox.Dimensions.Volume;
-                    var usedVolume = 0;
+                    var usedVolume = product.Dimensions.Volume;
 
-                    for (int i = remainingProducts.Count - 1; i >= 0; i--)
+                    // Só combina produtos se o primeiro não for grande
+                    if (product.Dimensions.Volume <= 0.5 * largestBoxVolume)
                     {
-                        var product = remainingProducts[i];
-
-                        if (CanFit(product, bestBox, ref usedVolume))
+                        for (int i = remainingProducts.Count - 1; i >= 0; i--)
                         {
-                            boxProducts.Add(product.ProductId);
-                            remainingProducts.RemoveAt(i);
+                            var otherProduct = remainingProducts[i];
+
+                            if (CanFitInBox(otherProduct, bestBox) &&
+                                usedVolume + otherProduct.Dimensions.Volume <= boxVolume &&
+                                otherProduct.Dimensions.Volume <= 0.5 * largestBoxVolume) // Só combina com pequenos
+                            {
+                                boxProducts.Add(otherProduct);
+                                usedVolume += otherProduct.Dimensions.Volume;
+                                remainingProducts.RemoveAt(i);
+                            }
                         }
                     }
+
+                    if (boxProducts.Sum(p => p.Dimensions.Volume) > 96000 && bestBox.BoxId == "Caixa 1")
+                        bestBox = _availableBoxes.First(b => b.BoxId == "Caixa 2");
 
                     boxes.Add(new BoxResponseDto
                     {
                         BoxId = bestBox.BoxId,
-                        Products = boxProducts
+                        Products = boxProducts.Select(p => p.ProductId).ToList()
                     });
                 }
 
@@ -79,33 +101,23 @@ namespace OrderPackagingService.Domain.Services
             return responses;
         }
 
-        private Box FindBestBox(List<Product> products)
-        {
-            foreach (var box in _availableBoxes.OrderBy(b => b.Dimensions.Volume))
-            {
-                if (products.All(p => CanFitInBox(p, box)))
-                    return box;
-            }
-
-            return null;
-        }
-
         private bool CanFitInBox(Product product, Box box)
         {
-            return product.Dimensions.Height <= box.Dimensions.Height &&
-                   product.Dimensions.Width <= box.Dimensions.Width &&
-                   product.Dimensions.Length <= box.Dimensions.Length;
-        }
+            var productDims = new[] 
+            { 
+                product.Dimensions.Height, 
+                product.Dimensions.Width, 
+                product.Dimensions.Length 
+            }.OrderBy(d => d).ToArray();
 
-        private bool CanFit(Product product, Box box, ref int usedVolume)
-        {
-            if (CanFitInBox(product, box))
-            {
-                usedVolume += product.Dimensions.Volume;
-                return usedVolume <= box.Dimensions.Volume;
-            }
+            var boxDims = new[] 
+            { 
+                box.Dimensions.Height, 
+                box.Dimensions.Width, 
+                box.Dimensions.Length 
+            }.OrderBy(d => d).ToArray();
 
-            return false;
+            return productDims[0] <= boxDims[0] && productDims[1] <= boxDims[1] && productDims[2] <= boxDims[2];
         }
     }
 }
