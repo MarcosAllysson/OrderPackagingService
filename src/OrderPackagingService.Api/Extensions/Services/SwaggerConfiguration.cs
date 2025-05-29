@@ -8,7 +8,26 @@ namespace OrderPackagingService.Api.Extensions.Services
         {
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "OrderPackagingService API", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo 
+                { 
+                    Title = "OrderPackagingService API", 
+                    Version = "v1",
+                    Description = "An API to handle packing service.",
+                    TermsOfService = new Uri("https://example.com/terms"),
+
+                    Contact = new OpenApiContact 
+                    { 
+                        Name = "Marcos Allysson",
+                        //Email = "",
+                        Url = new Uri("https://www.linkedin.com/in/marcosallysson/?locale=en_US")
+                    },
+
+                    License = new OpenApiLicense 
+                    {
+                        Name = "Project API",
+                        Url = new Uri("https://example.com/license"),
+                    }
+                });
 
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
