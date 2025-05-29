@@ -1,50 +1,57 @@
-# OrderPackagingService
+# OrderPackagingService (Desafio da loja do Manoel - L2 Code)
 
-A ASP.NET Web API for optimizing order packaging based on product dimensions and available boxes.
+Projeto ASP.NET Web API para otimizar a embalagem de pedidos com base nas dimensões do produto e nas caixas disponíveis na loja do Manoel.
 
-## Prerequisites
+## Pré-requisitos
 
 - Docker
-- .NET 9 SDK (if you're running it locally)
 
 ## Setup
 
-1. Clone the repository:
+1. Clone este repositório:
 
 ```
 git clone https://github.com/MarcosAllysson/OrderPackagingService.git
 cd OrderPackagingService
 ```
 
-2. Build and run with Docker Compose:
+2. Build e execute com docker-compose:
 
 ```
 docker-compose up -d
 ```
 
-3. Access api:
+3. Acesse a API:
 
 ```
-At http://localhost:8080
+Em: http://localhost:8080
 ```
 
-## Usage
+## Como usar a API
 
 1. Swagger:
 
 ```
-Navigate to http://localhost:8080/swagger for API documentation and exploration.
+Vá até: http://localhost:8080/swagger para ver a documentação.
 ```
 
-2. Authentication:
+## Autenticação:
 
 ```
-2.1: The /api/v1/Orders/pack endpoint requires a JWT token.
-2.2: To obtain a token, use the GET /api/v1/Auth/generate-token endpoint in Swagger.
-2.3: Copy the returned Token and use it in the Swagger "Authorize" button (format: Bearer <token>).
+1. O endpoint /api/v1/Orders/pack endpoint precisa de um token JWT.
 ```
 
-3. Input example:
+```
+2. Para facilitar o uso e gerar seu token, basta usar o endpoint mandando um GET em: /api/v1/Auth/generate-token no Swagger.
+```
+
+```
+3. Copie apenas o retorno entre aspas e use-o no Swagger, clicando no botão "Authorize" (formato: Bearer <token>).
+```
+
+3. Exemplo de entrada para você mandar na API:
+
+- `Apesar de que no desafio estava em português, implementei o código em inglês.`
 
 ```
 [
@@ -253,7 +260,7 @@ Navigate to http://localhost:8080/swagger for API documentation and exploration.
 ]
 ```
 
-4. Output expected:
+4. Saída esperada pela API:
 
 ```
 [
@@ -392,41 +399,45 @@ Navigate to http://localhost:8080/swagger for API documentation and exploration.
 ## Health Check
 
 ```
-Check the service health at http://localhost:8080/health
+Verifique o serviço de health-check do banco: http://localhost:8080/health
 ```
 
-## Testing:
+## Testes:
 
-1. Run unit tests:
+1. Execute os testes unitários:
 
 ```
 dotnet test
 ```
 
-## API Architecture:
+## Arquitetura que usei na API:
 
-API Layer: Handles HTTP requests and responses, with JWT authentication and Swagger integration.
+`Camada de .Api`: Lida com requisições e respostas HTTP, com autenticação JWT e integração com Swagger.
 
-Domain Layer: Implements the packing algorithm and business rules.
+`Camada de .Domain`: Implementa o algoritmo de empacotamento e as regras de negócio da aplicação/API.
 
-Infra Layer: Manages data persistence with SQL Server and EF Core.
+`Camada de .Infra`: Gerencia a persistência de dados com SQL Server e EF Core.
 
-Shared Layer: Contains DTOs for request/response models.
+`Camada de .Shared`: Contém DTOs para modelos de request/response da API.
 
-Tests Layer: Includes unit tests for the packing service.
+`Camada de .Tests`: Inclui testes unitários para o serviço de empacotamento.
 
-## Security Features
+## Segurança
 
-JWT Authentication: Protects the /api/v1/orders/pack endpoint.
+`Autenticação JWT`: Protege o endpoint /api/v1/Orders/pack.
 
-Rate Limiting: Limits requests to 100 per minute per IP.
+`Rate limit`: Limita as solicitações para a API em 100 requests por minuto por IP.
 
-CORS: Allows cross-origin requests for development.
+`CORS`: Permite solicitações entre origens para desenvolvimento.
 
-Security Headers: Includes X-Content-Type-Options, X-XSS-Protection, and X-Frame-Options.
+`Cabeçalhos de Segurança`: Inclui X-Content-Type-Options, X-XSS-Protection e X-Frame-Options.
 
-## Notes
+## OBS
 
-The project includes a SQL Server 2019 configured via Docker, with automatic migrations applied at startup.
+O projeto inclui o SQL Server 2019 configurado via Docker, com migrações automáticas aplicadas na inicialização.
 
-Although the challenge does not require persistence, the database is ready to save the packaging results (orders, boxes, products) if necessary. I chose not to implement persistence to focus on the packaging logic and explicit requirements, but the infrastructure is prepared for future extensions.
+Embora o desafio não exija persistência, o banco de dados está pronto para salvar os resultados de empacotamento (pedidos, caixas, produtos), se necessário. Optei por não implementar persistência para focar na lógica de empacotamento e nos requisitos do desafio, mas a infraestrutura está preparada para futuras extensões.
+
+Qualquer feedback é bem-vindo. Sou aberto sempre a aprender e melhorar.
+
+Há muito o que melhorar. Desde já, agradeço pela oportunidade, L2.
