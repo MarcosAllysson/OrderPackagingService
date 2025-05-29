@@ -8,8 +8,12 @@ namespace OrderPackagingService.Api.Extensions.Services
         public static IServiceCollection ConfigureDatabase(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
-            );
+                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"),
+                sqlOptions => sqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 10,
+                    maxRetryDelay: TimeSpan.FromSeconds(30),
+                    errorNumbersToAdd: null)
+            ));
 
             return services;
         }
